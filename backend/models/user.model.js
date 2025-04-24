@@ -19,16 +19,24 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now(),
     },
+    // isAccountedVerified
     isVerified: {
       type: Boolean,
       default: false,
     },
-    resetPasswordToken: String,
-    resetPasswordExpiresAt: Date,
-    verificationToken: String,
-    verificationTokenExpiresAt: Date,
+    verificationToken: {
+      type: String,
+      default: "",
+    },
+    verificationTokenExpiresAt: { type: Date },
+    resetPasswordToken: {
+      type: String,
+      default: "",
+    },
+    resetPasswordExpiresAt: { type: Date },
   },
   { timestamps: true },
 );
 
-export const User = mongoose.model("User", userSchema);
+export const userModel =
+  mongoose.models.user || mongoose.model("user", userSchema);
