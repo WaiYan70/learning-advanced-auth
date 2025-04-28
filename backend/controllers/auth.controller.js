@@ -1,6 +1,7 @@
 import { userModel } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import transporter from "../config/mailer.js";
 
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -32,14 +33,30 @@ export const register = async (req, res) => {
       samesite: process.env.NODE_ENV === "production" ? "none" : "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    return res.json({ success: true });
+    // sending welcome email
+    try {
+      const mailOptions = {
+        from: process.env.SENDER_EMAIL, // Fallback if env var not set
+        to: email,
+        subject: "Welcome to Our Platform",
+        text: `Hello ${name}, welcome to our platform! Your account has been created successfully.`,
+        html: `<h1>Welcome ${name}!</h1><p>Your account has been created successfully.</p>`, // HTML version is good to include
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`Welcome email sent to ${email}`);
+    } catch (emailError) {
+      // Log email error but don't fail registration
+      console.error("Error sending welcome email:", emailError);
+    }
+    return res.json({ success: true, message: "Registered Successful" });
   } catch (error) {
     return res.json({ success: false, message: error.message });
   }
 };
 
 export const login = async (req, res) => {
-  const { name, email } = req.body;
+  const { email, password } = req.body;
   if (!email || !password) {
     return res.json({
       success: false,
@@ -67,7 +84,7 @@ export const login = async (req, res) => {
       samesite: process.env.NODE_ENV === "production" ? "none" : "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    return res.json({ success: true });
+    return res.json({ success: true, message: "Login Successful" });
   } catch (error) {
     return res.json({ success: false, message: error.message });
   }
@@ -75,6 +92,13 @@ export const login = async (req, res) => {
 
 export const logout = (req, res) => {
   try {
+    // checking condition is for API testing purpose with Postman
+    // Checking cookie before hitting logout API endpoint
+    const token = req.cookies?.auth_token;
+    if (!token) {
+      return res.json({ success: false, message: "No auth_token in cookie" });
+    }
+    // Logout function to clear Cookie
     res.clearCookie("auth_token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

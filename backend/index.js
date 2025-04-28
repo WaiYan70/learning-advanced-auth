@@ -1,11 +1,12 @@
 import express from "express";
-import { connectDataBase } from "./database/index.js";
-import dotenv from "dotenv";
+import { connectDataBase } from "./config/mongodb.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import dotenv from "dotenv";
 import userRouter from "./routes/auth.route.js";
 
 dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT;
 

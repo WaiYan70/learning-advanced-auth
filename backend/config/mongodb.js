@@ -15,7 +15,9 @@ export const connectDataBase = async () => {
     mongoose.connection.on("error", () => {
       console.error(`❌ Database connection error:`);
     });
-    const connectionStatus = await mongoose.connect(mongodbConnectionString);
+    const connectionStatus = await mongoose.connect(mongodbConnectionString, {
+      dbName: "auth-users",
+    });
     console.log(`MongoDB Connected to: ${connectionStatus.connection.host}`);
   } catch (error) {
     console.error("Failed to connect Mongo Database: ", error.message);

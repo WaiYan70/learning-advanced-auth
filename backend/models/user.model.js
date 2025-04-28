@@ -1,17 +1,22 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
+const { Schema, model, models } = mongoose;
+
+const userSchema = new Schema(
   {
+    name: {
+      type: String,
+      require: true,
+    },
     email: {
       type: String,
-      require: true,
+      required: true,
       unique: true,
+      trim: true,
+      lowercase: true,
+      match: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
     },
     password: {
-      type: String,
-      require: true,
-    },
-    name: {
       type: String,
       require: true,
     },
@@ -28,15 +33,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    verificationTokenExpiresAt: { type: Date },
+    verificationTokenExpiresAt: {
+      type: Date,
+      default: null,
+    },
     resetPasswordToken: {
       type: String,
       default: "",
     },
-    resetPasswordExpiresAt: { type: Date },
+    resetPasswordExpiresAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );
 
-export const userModel =
-  mongoose.models.user || mongoose.model("user", userSchema);
+export const userModel = models.user || model("user", userSchema);
