@@ -36,18 +36,16 @@ export const register = async (req, res) => {
     // sending welcome email
     try {
       const mailOptions = {
-        from: process.env.SENDER_EMAIL, // Fallback if env var not set
+        from: process.env.SENDER_EMAIL,
         to: email,
-        subject: "Welcome to Our Platform",
-        text: `Hello ${name}, welcome to our platform! Your account has been created successfully.`,
-        html: `<h1>Welcome ${name}!</h1><p>Your account has been created successfully.</p>`, // HTML version is good to include
+        subject: "Welcome to Our H&T Online Shopping!!",
+        text: `Hello ${name}, Welcome to our H&T online shopping application! Your Account has been created successfully`,
+        html: `<h1>Welcome ${name}</h1><p>Welcome to our H&T online shopping application! Your Account has been created successfully</p>`,
       };
-
       await transporter.sendMail(mailOptions);
       console.log(`Welcome email sent to ${email}`);
     } catch (emailError) {
-      // Log email error but don't fail registration
-      console.error("Error sending welcome email:", emailError);
+      console.error(`Error sending welcome email: ${emailError}`);
     }
     return res.json({ success: true, message: "Registered Successful" });
   } catch (error) {
@@ -107,5 +105,73 @@ export const logout = (req, res) => {
     return res.json({ success: true, message: "Log out successfully" });
   } catch (error) {
     return res.json({ success: false, message: error.message });
+  }
+};
+
+// Send Verification OTP to User's Email
+export const sendVerifyOTP = async () => {
+  try {
+    // First, find user and check if user email is verified or not
+    const { userId } = req.body;
+    const user = await userModel.findById(userId);
+    if (user.isVerified) {
+      return res.json({
+        success: false,
+        message: "this account is already verified",
+      });
+    }
+    // setup and save OTP, Token and Token ExpireAt
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    user.verificationToken = otp;
+    user.verificationOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
+    await user.save();
+
+    // sending OPT via Email
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: user.email,
+      subject: "Account Verification OTP, H&T Online Shopping",
+      text: `Your OTP is ${otp}, Verify your account using this OTP`,
+    };
+    await transporter.sendMail(mailOptions);
+    res.json({ success: true, message: "Verification OTP sent on email" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export const verifyEmail = async () => {
+  const { userId, otp } = req.body;
+  if (!userId || !otp) {
+    return res.json({
+      success: false,
+      message: "Missing userId or otp details",
+    });
+  }
+  try {
+    // find the userId
+    // check userId, OTP and OTP expiredDate
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.json({ success: false, message: "User is not found" });
+    }
+    if (user.verificationOtp === "" || user.verificationOtp !== otp) {
+      return res.json({ success: false, message: "Invalid OTP" });
+    }
+    if (user.verificationOtpExpireAt < Date.now()) {
+      return res.json({ success: false, message: "OTP Expire" });
+    }
+    // save data about isVerified or not, reset otp and otp's expiredDate
+    user.isVerified = true;
+    user.verificationOtp = "";
+    user.verificationOtpExpireAt = 0;
+    await user.save();
+    // after saving data, return successful message
+    return res.json({ success: true, message: "Email Verify successfully " });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
   }
 };

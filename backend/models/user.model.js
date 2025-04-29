@@ -29,21 +29,22 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    verificationToken: {
+    // Verification OTP
+    verificationOtp: {
       type: String,
       default: "",
     },
-    verificationTokenExpiresAt: {
-      type: Date,
-      default: null,
+    verificationOtpExpiresAt: {
+      type: Number,
+      default: 0,
     },
-    resetPasswordToken: {
+    resetPassword: {
       type: String,
       default: "",
     },
     resetPasswordExpiresAt: {
-      type: Date,
-      default: null,
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true },
