@@ -27,7 +27,7 @@ export const register = async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
-    res.cookie("auth_token", token, {
+    res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       samesite: process.env.NODE_ENV === "production" ? "none" : "strict",
@@ -76,7 +76,7 @@ export const login = async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
-    res.cookie("auth_token", token, {
+    res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       samesite: process.env.NODE_ENV === "production" ? "none" : "strict",
@@ -92,12 +92,12 @@ export const logout = (req, res) => {
   try {
     // checking condition is for API testing purpose with Postman
     // Checking cookie before hitting logout API endpoint
-    const token = req.cookies?.auth_token;
+    const token = req.cookies?.token;
     if (!token) {
       return res.json({ success: false, message: "No auth_token in cookie" });
     }
     // Logout function to clear Cookie
-    res.clearCookie("auth_token", {
+    res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       samesite: process.env.NODE_ENV === "production" ? "none" : "strict",
@@ -109,21 +109,24 @@ export const logout = (req, res) => {
 };
 
 // Send Verification OTP to User's Email
-export const sendVerifyOTP = async () => {
+export const sendVerifyOTP = async (req, res) => {
   try {
     // First, find user and check if user email is verified or not
-    const { userId } = req.body;
+    const userId = req.user.id;
     const user = await userModel.findById(userId);
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
     if (user.isVerified) {
       return res.json({
         success: false,
-        message: "this account is already verified",
+        message: "This Account is already verified",
       });
     }
     // setup and save OTP, Token and Token ExpireAt
     const otp = String(Math.floor(100000 + Math.random() * 900000));
-    user.verificationToken = otp;
-    user.verificationOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
+    user.verificationOtp = otp;
+    user.verificationOtpExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
     await user.save();
 
     // sending OPT via Email
@@ -140,17 +143,17 @@ export const sendVerifyOTP = async () => {
   }
 };
 
-export const verifyEmail = async () => {
-  const { userId, otp } = req.body;
-  if (!userId || !otp) {
+export const verifyEmail = async (req, res) => {
+  const userId = req.user.id;
+  const { otp } = req.body;
+  if (!otp) {
     return res.json({
       success: false,
-      message: "Missing userId or otp details",
+      message: "Missing OTP",
     });
   }
   try {
-    // find the userId
-    // check userId, OTP and OTP expiredDate
+    // find the userId and check userId, OTP and OTP expiredDate
     const user = await userModel.findById(userId);
     if (!user) {
       return res.json({ success: false, message: "User is not found" });
@@ -158,13 +161,13 @@ export const verifyEmail = async () => {
     if (user.verificationOtp === "" || user.verificationOtp !== otp) {
       return res.json({ success: false, message: "Invalid OTP" });
     }
-    if (user.verificationOtpExpireAt < Date.now()) {
+    if (user.verificationOtpExpiresAt < Date.now()) {
       return res.json({ success: false, message: "OTP Expire" });
     }
     // save data about isVerified or not, reset otp and otp's expiredDate
     user.isVerified = true;
     user.verificationOtp = "";
-    user.verificationOtpExpireAt = 0;
+    user.verificationOtpExpiresAt = 0;
     await user.save();
     // after saving data, return successful message
     return res.json({ success: true, message: "Email Verify successfully " });
