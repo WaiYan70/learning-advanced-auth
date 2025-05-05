@@ -3,7 +3,8 @@ import { connectDataBase } from "./config/mongodb.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
-import userRouter from "./routes/auth.route.js";
+import authRouter from "./routes/auth.route.js";
+import userRouter from "./routes/user.route.js";
 
 dotenv.config();
 
@@ -17,7 +18,8 @@ app.use(cookieParser());
 app.use(cors({ credentials: true }));
 
 // API endpoint
-app.use("/api/auth", userRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/user", userRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello 123!");

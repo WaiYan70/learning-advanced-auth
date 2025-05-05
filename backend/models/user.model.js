@@ -38,11 +38,12 @@ const userSchema = new Schema(
       type: Number,
       default: 0,
     },
-    resetPassword: {
+    // Reset Password via OTP
+    resetPasswordOtp: {
       type: String,
       default: "",
     },
-    resetPasswordExpiresAt: {
+    resetPasswordOtpExpiresAt: {
       type: Number,
       default: 0,
     },
