@@ -19,7 +19,7 @@ const Navbar = () => {
       );
       if (data.success) {
         navigate("/email-verify");
-        toast.successd(data.message);
+        toast.success(data.message);
       } else {
         toast.error(data.message);
       }
@@ -45,7 +45,7 @@ const Navbar = () => {
       {userData ? (
         <div className="w-8 h-8 flex justify-center items-center rounded-full bg-black text-white relative group">
           {userData.name[0].toUpperCase()}
-          <div className="absolute block group-hover:block top-0 right-0 z-10 text-black rounded pt-10">
+          <div className="absolute hidden group-hover:block top-0 right-0 z-10 text-black rounded pt-10">
             <ul className="list-none m-0 py-2 px-8 bg-gray-100 text-sm">
               {!userData.isVerified && (
                 <li
